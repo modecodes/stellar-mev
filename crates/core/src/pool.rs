@@ -88,3 +88,27 @@ impl LiquidityPool {
         amount_out
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_constant_product_swap() {
+        let pool = LiquidityPool::new(
+            "test_pool".to_string(),
+            Asset::native(),
+            Asset::usdc("ISSUER"),
+            StroopAmount::from_units(1_000_000.0),
+            StroopAmount::from_units(100_000.0),
+            30, // 0.3%
+        );
+
+        let input = StroopAmount::from_units(1_000.0);
+        let output = pool.get_amount_out(input, &Asset::native());
+
+        // Expected output ~ 99.60 USDC (accounting for 0.3% fee and slippage)
+        assert!(output.as_units() > 99.0);
+        assert!(output.as_units() < 100.0);
+    }
+}
