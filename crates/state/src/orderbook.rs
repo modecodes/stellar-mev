@@ -34,3 +34,36 @@ impl OrderBookSide {
         removed
     }
 }
+
+/// Orderbook for a specific asset pair (Selling -> Buying)
+#[derive(Debug, Clone, Default)]
+pub struct OrderBook {
+    pub asks: OrderBookSide, // Offers selling base for quote
+    pub bids: OrderBookSide, // Offers buying base for quote
+}
+
+impl OrderBook {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add_ask(&mut self, offer: Offer) {
+        self.asks.insert(offer);
+    }
+
+    pub fn add_bid(&mut self, offer: Offer) {
+        self.bids.insert(offer);
+    }
+
+    pub fn remove_offer(&mut self, offer_id: u64) -> bool {
+        self.asks.remove(offer_id) || self.bids.remove(offer_id)
+    }
+
+    pub fn best_ask(&self) -> Option<Price> {
+        self.asks.levels.keys().next().copied()
+    }
+
+    pub fn best_bid(&self) -> Option<Price> {
+        self.bids.levels.keys().next_back().copied()
+    }
+}
