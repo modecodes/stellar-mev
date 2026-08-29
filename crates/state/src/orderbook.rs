@@ -1,4 +1,4 @@
-use stellar_mev_core::{Offer, Price};
+use stellar_mev_core::{Offer, Price, StroopAmount};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Default)]
@@ -65,5 +65,33 @@ impl OrderBook {
 
     pub fn best_bid(&self) -> Option<Price> {
         self.bids.levels.keys().next_back().copied()
+    }
+
+    /// Walk the orderbook asks to calculate how much quote asset is obtained by spending `amount_in` of base asset
+    pub fn simulate_sell_base(&self, amount_in: StroopAmount) -> (StroopAmount, f64) {
+        let mut remaining = amount_in.as_units();
+        let mut total_out = 0.0;
+
+        for (price, level) in self.asks.levels.iter() {
+            for offer in level {
+                let offer_capacity = offer.amount.as_units();
+                let fill_base = remaining.min(offer_capacity);
+                let fill_quote = fill_base * price.as_f64();
+
+                total_out += fill_quote;
+                remaining -= fill_base;
+
+                if remaining <= 0.0000001 {
+                    break;
+                }
+            }
+            if remaining <= 0.0000001 {
+                break;
+            }
+        }
+
+        let filled_amount = amount_in.as_units() - remaining;
+        let effective_rate = if filled_amount > 0.0 { total_out / filled_amount } else { 0.0 };
+        (StroopAmount::from_units(total_out), effective_rate)
     }
 }
