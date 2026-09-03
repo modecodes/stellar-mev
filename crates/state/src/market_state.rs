@@ -4,6 +4,7 @@ use parking_lot::RwLock;
 use stellar_mev_core::{Asset, LedgerDelta, LedgerHeader, LiquidityPool};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicPtr, Ordering};
 
 #[derive(Debug, Clone, Default)]
 pub struct MarketStateInner {
@@ -12,6 +13,18 @@ pub struct MarketStateInner {
     pub pools: PoolStore,
     pub assets: HashSet<Asset>,
     pub offer_index: HashMap<u64, (Asset, Asset)>, // maps offer_id to pair
+}
+
+/// EXPERIMENTAL: Attempting lock-free raw pointer state swapping for zero-cost concurrent reads
+#[derive(Default)]
+pub struct MarketStateUnsafe {
+    raw_ptr: AtomicPtr<MarketStateInner>,
+}
+
+impl MarketStateUnsafe {
+    pub fn snapshot_ptr(&self) -> *mut MarketStateInner {
+        self.raw_ptr.load(Ordering::Acquire)
+    }
 }
 
 #[derive(Clone, Default)]
