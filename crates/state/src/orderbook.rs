@@ -95,3 +95,41 @@ impl OrderBook {
         (StroopAmount::from_units(total_out), effective_rate)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use stellar_mev_core::Asset;
+
+    #[test]
+    fn test_orderbook_insert_and_best_ask() {
+        let mut ob = OrderBook::new();
+        let offer1 = Offer::new(
+            1,
+            "SELLER".to_string(),
+            Asset::native(),
+            Asset::usdc("ISSUER"),
+            StroopAmount::from_units(100.0),
+            Price::from_f64(0.12),
+            100,
+        );
+        let offer2 = Offer::new(
+            2,
+            "SELLER".to_string(),
+            Asset::native(),
+            Asset::usdc("ISSUER"),
+            StroopAmount::from_units(100.0),
+            Price::from_f64(0.11),
+            100,
+        );
+
+        ob.add_ask(offer1);
+        ob.add_ask(offer2);
+
+        // Best ask should be lowest price (0.11)
+        assert_eq!(ob.best_ask().unwrap().as_f64(), Price::from_f64(0.11).as_f64());
+
+        ob.remove_offer(2);
+        assert_eq!(ob.best_ask().unwrap().as_f64(), Price::from_f64(0.12).as_f64());
+    }
+}
