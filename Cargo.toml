@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/core",
+    "crates/streamer",
     "crates/state",
 ]
 resolver = "2"
@@ -12,4 +13,5 @@ edition = "2021"
 
 [dependencies]
 stellar-mev-core = { path = "crates/core" }
+stellar-mev-streamer = { path = "crates/streamer" }
 stellar-mev-state = { path = "crates/state" }
