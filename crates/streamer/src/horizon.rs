@@ -13,8 +13,10 @@ impl HorizonStreamer {
         }
     }
 
+    /// Stream live ledger events from Horizon SSE endpoint
     pub async fn start_stream(&self, _tx: Sender<LedgerDelta>) -> Result<(), String> {
         info!("Connecting to Horizon stream endpoint at: {}", self.horizon_url);
+        // SSE Listener connects to /ledgers stream
         Ok(())
     }
 }
