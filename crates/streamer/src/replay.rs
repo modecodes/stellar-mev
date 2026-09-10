@@ -40,15 +40,19 @@ impl SyntheticReplayStreamer {
         }).await;
 
         let start_ledger = 50_000_000u32;
-        let mut rng = rand::thread_rng();
 
         for seq in start_ledger..(start_ledger + self.num_ledgers) {
+            let (tx_count, op_count) = {
+                let mut rng = rand::thread_rng();
+                (rng.gen_range(15..120), rng.gen_range(50..400))
+            };
+
             let header = LedgerHeader {
                 sequence: seq,
                 hash: format!("{:064x}", seq),
                 close_time: chrono::Utc::now().timestamp() as u64,
-                tx_count: rng.gen_range(15..120),
-                operation_count: rng.gen_range(50..400),
+                tx_count,
+                operation_count: op_count,
             };
 
             if tx.send(LedgerDelta::LedgerClosed(header)).await.is_err() {
@@ -58,13 +62,18 @@ impl SyntheticReplayStreamer {
 
             for offer_idx in 0..8 {
                 let id = (seq as u64 * 100) + offer_idx;
-                let price_val = match offer_idx % 4 {
-                    0 => 8.85 + rng.gen_range(-0.2..0.5),
-                    1 => 105.0 + rng.gen_range(-2.0..8.0),
-                    2 => 0.095 + rng.gen_range(-0.005..0.02),
-                    _ => 1.02 + rng.gen_range(-0.01..0.05),
+                let (price_val, offer_amount, is_create) = {
+                    let mut rng = rand::thread_rng();
+                    let p = match offer_idx % 4 {
+                        0 => 8.85 + rng.gen_range(-0.2..0.5),
+                        1 => 105.0 + rng.gen_range(-2.0..8.0),
+                        2 => 0.095 + rng.gen_range(-0.005..0.02),
+                        _ => 1.02 + rng.gen_range(-0.01..0.05),
+                    };
+                    let amt = rng.gen_range(2000.0..100000.0);
+                    let create = rng.gen_bool(0.8);
+                    (p, amt, create)
                 };
-                let amt = rng.gen_range(2000.0..100000.0);
 
                 let (selling, buying) = match offer_idx % 4 {
                     0 => (usdc.clone(), xlm.clone()),
@@ -78,12 +87,20 @@ impl SyntheticReplayStreamer {
                     "GAARBITRAGEBOTSELLERADDRESS1234567890".to_string(),
                     selling,
                     buying,
-                    StroopAmount::from_units(amt),
+                    StroopAmount::from_units(offer_amount),
                     Price::from_f64(price_val),
                     seq,
                 );
 
-                let _ = tx.send(LedgerDelta::OfferCreated(offer)).await;
+                let delta = if is_create {
+                    LedgerDelta::OfferCreated(offer)
+                } else {
+                    LedgerDelta::OfferUpdated(offer)
+                };
+
+                if tx.send(delta).await.is_err() {
+                    break;
+                }
             }
 
             if self.delta_delay_ms > 0 {
