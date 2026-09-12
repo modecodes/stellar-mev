@@ -24,12 +24,21 @@ impl SyntheticReplayStreamer {
         let aqua = Asset::aqua("GBNYLNC5A3G4HKTX4BMBNTXDQCHV4EHSVYDEM26W2W2T5LWWNWEXAQUA");
         let yxlm = Asset::yxlm("GARDNV3SOC72EMRBDM2P2W2ACVFLXZB44DHNRFEJPCCIBEZ522G4WXAL");
 
+        // Seed initial liquidity pools
         let pool_xlm_usdc = LiquidityPool::new(
             "pool_xlm_usdc_001".to_string(),
             xlm.clone(),
             usdc.clone(),
             StroopAmount::from_units(1_000_000.0),
-            StroopAmount::from_units(120_000.0),
+            StroopAmount::from_units(120_000.0), // 1 XLM = 0.12 USDC on AMM
+            30,
+        );
+        let pool_usdc_aqua = LiquidityPool::new(
+            "pool_usdc_aqua_001".to_string(),
+            usdc.clone(),
+            aqua.clone(),
+            StroopAmount::from_units(100_000.0),
+            StroopAmount::from_units(10_000_000.0), // 1 USDC = 100 AQUA on AMM
             30,
         );
 
@@ -37,6 +46,12 @@ impl SyntheticReplayStreamer {
             pool_id: pool_xlm_usdc.pool_id.clone(),
             reserve_a: pool_xlm_usdc.reserve_a,
             reserve_b: pool_xlm_usdc.reserve_b,
+        }).await;
+
+        let _ = tx.send(LedgerDelta::PoolReserveUpdated {
+            pool_id: pool_usdc_aqua.pool_id.clone(),
+            reserve_a: pool_usdc_aqua.reserve_a,
+            reserve_b: pool_usdc_aqua.reserve_b,
         }).await;
 
         let start_ledger = 50_000_000u32;
@@ -60,15 +75,16 @@ impl SyntheticReplayStreamer {
                 break;
             }
 
-            for offer_idx in 0..8 {
+            // Generate synthetic SDEX limit offer changes
+            for offer_idx in 0..12 {
                 let id = (seq as u64 * 100) + offer_idx;
                 let (price_val, offer_amount, is_create) = {
                     let mut rng = rand::thread_rng();
                     let p = match offer_idx % 4 {
-                        0 => 8.85 + rng.gen_range(-0.2..0.5),
-                        1 => 105.0 + rng.gen_range(-2.0..8.0),
-                        2 => 0.095 + rng.gen_range(-0.005..0.02),
-                        _ => 1.02 + rng.gen_range(-0.01..0.05),
+                        0 => 8.85 + rng.gen_range(-0.2..0.5),      // selling USDC for XLM
+                        1 => 105.0 + rng.gen_range(-2.0..8.0),     // selling USDC for AQUA
+                        2 => 0.095 + rng.gen_range(-0.005..0.02),  // selling AQUA for XLM
+                        _ => 1.02 + rng.gen_range(-0.01..0.05),    // selling yXLM for XLM
                     };
                     let amt = rng.gen_range(2000.0..100000.0);
                     let create = rng.gen_bool(0.8);
@@ -101,6 +117,24 @@ impl SyntheticReplayStreamer {
                 if tx.send(delta).await.is_err() {
                     break;
                 }
+            }
+
+            // Optionally mutate pool reserves to trigger cross-DEX arbitrage opportunities
+            if seq % 2 == 0 {
+                let (res_a, res_b) = {
+                    let mut rng = rand::thread_rng();
+                    (
+                        1_000_000.0 + rng.gen_range(-50000.0..50000.0),
+                        120_000.0 + rng.gen_range(-6000.0..6000.0),
+                    )
+                };
+
+                let pool_delta = LedgerDelta::PoolReserveUpdated {
+                    pool_id: "pool_xlm_usdc_001".to_string(),
+                    reserve_a: StroopAmount::from_units(res_a),
+                    reserve_b: StroopAmount::from_units(res_b),
+                };
+                let _ = tx.send(pool_delta).await;
             }
 
             if self.delta_delay_ms > 0 {
