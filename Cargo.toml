@@ -3,6 +3,7 @@ members = [
     "crates/core",
     "crates/streamer",
     "crates/state",
+    "crates/opportunity",
 ]
 resolver = "2"
 
@@ -15,3 +16,4 @@ edition = "2021"
 stellar-mev-core = { path = "crates/core" }
 stellar-mev-streamer = { path = "crates/streamer" }
 stellar-mev-state = { path = "crates/state" }
+stellar-mev-opportunity = { path = "crates/opportunity" }
