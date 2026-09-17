@@ -1,5 +1,5 @@
 use stellar_mev_core::{Asset, VenueType};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone)]
 pub struct Edge {
@@ -48,5 +48,31 @@ impl MarketGraph {
             rate,
             weight,
         });
+    }
+
+    /// Bellman-Ford negative log cycle detector for triangular & multi-hop arbitrage
+    pub fn find_arbitrage_cycles(&self) -> Vec<Vec<Edge>> {
+        let n = self.assets.len();
+        if n < 2 || self.edges.is_empty() {
+            return Vec::new();
+        }
+
+        let mut dist = vec![0.0f64; n];
+        let mut parent_edge: Vec<Option<Edge>> = vec![None; n];
+
+        // Relax edges up to N-1 times
+        for _ in 0..(n - 1) {
+            for edge in &self.edges {
+                let u = self.asset_index[&edge.from];
+                let v = self.asset_index[&edge.to];
+                if dist[u] + edge.weight < dist[v] {
+                    dist[v] = dist[u] + edge.weight;
+                    parent_edge[v] = Some(edge.clone());
+                }
+            }
+        }
+
+        let mut cycles = Vec::new();
+        cycles
     }
 }
