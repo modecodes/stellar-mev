@@ -72,7 +72,54 @@ impl MarketGraph {
             }
         }
 
+        // Check for negative cycles on N-th iteration
         let mut cycles = Vec::new();
+        let mut visited_cycle_nodes = HashSet::new();
+
+        for edge in &self.edges {
+            let u = self.asset_index[&edge.from];
+            let v = self.asset_index[&edge.to];
+
+            if dist[u] + edge.weight < dist[v] {
+                if visited_cycle_nodes.contains(&v) {
+                    continue;
+                }
+
+                let mut curr = v;
+                let mut cycle_edges = Vec::new();
+                let mut visited = HashSet::new();
+
+                while !visited.contains(&curr) {
+                    visited.insert(curr);
+                    if let Some(ref e) = parent_edge[curr] {
+                        curr = self.asset_index[&e.from];
+                    } else {
+                        break;
+                    }
+                }
+
+                let cycle_start = curr;
+                let mut step = cycle_start;
+                loop {
+                    if let Some(ref e) = parent_edge[step] {
+                        cycle_edges.push(e.clone());
+                        step = self.asset_index[&e.from];
+                        visited_cycle_nodes.insert(step);
+                        if step == cycle_start {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                cycle_edges.reverse();
+                if cycle_edges.len() >= 2 {
+                    cycles.push(cycle_edges);
+                }
+            }
+        }
+
         cycles
     }
 }
