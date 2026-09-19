@@ -50,13 +50,6 @@ impl MarketGraph {
         });
     }
 
-    /// EXPERIMENTAL: Shortest path search using Dijkstra algorithm
-    /// Note: Dijkstra assumes non-negative edge weights and fails on negative log cycles.
-    pub fn find_cycles_dijkstra(&self) -> Vec<Vec<Edge>> {
-        // Placeholder for Dijkstra cycle search
-        Vec::new()
-    }
-
     /// Bellman-Ford negative log cycle detector for triangular & multi-hop arbitrage
     pub fn find_arbitrage_cycles(&self) -> Vec<Vec<Edge>> {
         let n = self.assets.len();
