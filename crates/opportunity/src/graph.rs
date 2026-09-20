@@ -123,3 +123,32 @@ impl MarketGraph {
         cycles
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bellman_ford_arbitrage_cycle_detection() {
+        let mut graph = MarketGraph::new();
+
+        let xlm = Asset::native();
+        let usdc = Asset::usdc("ISSUER1");
+        let aqua = Asset::aqua("ISSUER2");
+
+        // XLM -> USDC @ 0.12 (1 XLM = 0.12 USDC)
+        graph.add_edge(xlm.clone(), usdc.clone(), VenueType::SdexOrderbook, 0.12);
+
+        // USDC -> AQUA @ 100 (1 USDC = 100 AQUA)
+        graph.add_edge(usdc.clone(), aqua.clone(), VenueType::SdexOrderbook, 100.0);
+
+        // AQUA -> XLM @ 0.10 (1 AQUA = 0.10 XLM) => Cycle product = 0.12 * 100 * 0.10 = 1.20 (> 1.0 = +20% Arbitrage!)
+        graph.add_edge(aqua.clone(), xlm.clone(), VenueType::SdexOrderbook, 0.10);
+
+        let cycles = graph.find_arbitrage_cycles();
+        assert!(!cycles.is_empty(), "Bellman-Ford should detect negative log cycle");
+
+        let product: f64 = cycles[0].iter().map(|e| e.rate).product();
+        assert!(product > 1.15, "Arbitrage product must be > 1.15");
+    }
+}
