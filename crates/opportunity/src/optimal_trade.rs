@@ -2,7 +2,8 @@ use stellar_mev_core::{LiquidityPool, StroopAmount};
 
 /// Computes the optimal input amount for arbitrage against an AMM Constant Product pool (xy=k)
 /// given an external target counter-price P (amount of output asset per 1 unit of input asset).
-/// Formula: dx* = (sqrt(Rx * Ry * fee * P) - Rx) / fee
+/// Derived by solving d/dx [ (y - (x*y)/(x + dx*(1-f))) * P - dx ] = 0
+/// Closed-form formula: dx* = (sqrt(Rx * Ry * fee * P) - Rx) / fee
 pub fn compute_optimal_amm_input(
     pool: &LiquidityPool,
     asset_in_a: bool,
