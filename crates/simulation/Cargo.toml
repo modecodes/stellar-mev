@@ -1,0 +1,12 @@
+[package]
+name = "stellar-mev-simulation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stellar-mev-core = { path = "../core" }
+stellar-mev-state = { path = "../state" }
+stellar-mev-opportunity = { path = "../opportunity" }
+tracing = "0.1"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
