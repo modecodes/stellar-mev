@@ -5,6 +5,7 @@ members = [
     "crates/state",
     "crates/opportunity",
     "crates/simulation",
+    "crates/transaction",
 ]
 resolver = "2"
 
@@ -19,3 +20,4 @@ stellar-mev-streamer = { path = "crates/streamer" }
 stellar-mev-state = { path = "crates/state" }
 stellar-mev-opportunity = { path = "crates/opportunity" }
 stellar-mev-simulation = { path = "crates/simulation" }
+stellar-mev-transaction = { path = "crates/transaction" }
