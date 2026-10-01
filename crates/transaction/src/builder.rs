@@ -24,6 +24,16 @@ impl TransactionBuilder {
         }
     }
 
+    /// Estimate dynamic priority fee bidding based on network congestion
+    pub fn estimate_priority_fee(&self, path: &ArbitragePath) -> u64 {
+        let profit_units = path.net_profit.as_units();
+        if profit_units > 10.0 {
+            1_000 // 1000 Stroops priority bid for high profit ops
+        } else {
+            500   // Default 500 Stroops
+        }
+    }
+
     /// Build a Stellar PathPayment / Soroban MEV transaction envelope
     pub fn build_arbitrage_tx(
         &self,
