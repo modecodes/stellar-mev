@@ -14,7 +14,7 @@ pub struct ExecutionResult {
 pub struct TransactionCoordinator {
     pub builder: TransactionBuilder,
     pub simulator: TransactionSimulator,
-    pub fixed_sequence: u64, // EXPERIMENTAL: Hardcoded sequence for testing
+    pub sequence_counter: std::sync::atomic::AtomicU64,
 }
 
 impl TransactionCoordinator {
@@ -22,7 +22,7 @@ impl TransactionCoordinator {
         Self {
             builder: TransactionBuilder::new(source_account, 100),
             simulator: TransactionSimulator::new(max_slippage_pct),
-            fixed_sequence: initial_sequence,
+            sequence_counter: std::sync::atomic::AtomicU64::new(initial_sequence),
         }
     }
 }
