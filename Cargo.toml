@@ -6,6 +6,7 @@ members = [
     "crates/opportunity",
     "crates/simulation",
     "crates/transaction",
+    "crates/dashboard",
     "."
 ]
 resolver = "2"
@@ -22,6 +23,7 @@ stellar-mev-state = { path = "crates/state" }
 stellar-mev-opportunity = { path = "crates/opportunity" }
 stellar-mev-simulation = { path = "crates/simulation" }
 stellar-mev-transaction = { path = "crates/transaction" }
+stellar-mev-dashboard = { path = "crates/dashboard" }
 
 tokio = { version = "1.40", features = ["full"] }
 clap = { version = "4.5", features = ["derive"] }
@@ -32,3 +34,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = "0.4"
 colored = "2.1"
+ratatui = "0.28"
+crossterm = "0.28"

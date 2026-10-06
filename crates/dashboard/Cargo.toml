@@ -1,0 +1,15 @@
+[package]
+name = "stellar-mev-dashboard"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stellar-mev-core = { path = "../core" }
+stellar-mev-state = { path = "../state" }
+stellar-mev-opportunity = { path = "../opportunity" }
+ratatui = "0.28"
+crossterm = "0.28"
+tokio = { version = "1.40", features = ["full"] }
+tracing = "0.1"
+thiserror = "1.0"
+chrono = "0.4"
