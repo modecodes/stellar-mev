@@ -1,10 +1,13 @@
 use clap::Parser;
 use colored::*;
 use stellar_mev_core::StroopAmount;
+use stellar_mev_dashboard::{DashboardApp, render_dashboard};
 use stellar_mev_opportunity::OpportunityEngine;
 use stellar_mev_state::MarketState;
 use stellar_mev_streamer::SyntheticReplayStreamer;
 use stellar_mev_transaction::TransactionCoordinator;
+use std::io;
+use std::time::Duration;
 use tokio::sync::mpsc;
 use tracing_subscriber::EnvFilter;
 
@@ -40,9 +43,11 @@ struct Args {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive(tracing::Level::INFO.into()))
-        .init();
+    if !args.dashboard {
+        tracing_subscriber::fmt()
+            .with_env_filter(EnvFilter::from_default_env().add_directive(tracing::Level::INFO.into()))
+            .init();
+    }
 
     println!("{}", "=========================================================".cyan());
     println!("{}", "   ⚡ STELLAR MEV & DEX EXECUTION ENGINE (RUST) ⚡   ".yellow().bold());
@@ -78,54 +83,116 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let mut delta_count = 0u64;
-    let mut total_profit = 0.0;
-    let mut executed_txs = 0;
+    let mut dashboard_app = DashboardApp::new();
 
-    while let Some(delta) = rx.recv().await {
-        delta_count += 1;
-        state.apply_delta(delta);
+    if args.dashboard {
+        // Run Ratatui Dashboard Loop
+        crossterm::terminal::enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        crossterm::execute!(stdout, crossterm::terminal::EnterAlternateScreen)?;
+        let backend = ratatui::backend::CrosstermBackend::new(stdout);
+        let mut terminal = ratatui::Terminal::new(backend)?;
 
-        let current_seq = state.current_ledger_sequence();
-        let opportunities = opp_engine.scan_opportunities(&state);
+        let mut delta_count = 0u64;
 
-        for opp in opportunities {
-            println!(
-                "{} [Ledger #{}] Discovered {:?} cycle: Hops={} | Est. Profit: +{:.4} XLM ({:.2}%)",
-                "🎯 OPPORTUNITY DETECTED:".green().bold(),
-                current_seq,
-                opp.strategy_type,
-                opp.hops.len(),
-                opp.net_profit.as_units(),
-                opp.profit_margin_pct
-            );
+        while let Some(delta) = rx.recv().await {
+            delta_count += 1;
+            state.apply_delta(delta);
 
-            match coordinator.execute_opportunity(&opp, &state).await {
-                Ok(res) => {
-                    executed_txs += 1;
-                    let profit_xlm = res.actual_profit_stroops as f64 / 10_000_000.0;
-                    total_profit += profit_xlm;
-                    println!(
-                        "{} Tx Hash: {} | Net Realized Profit: +{:.4} XLM | Total Cumulative PnL: +{:.4} XLM\n",
-                        "🚀 TX SUBMITTED & EXECUTED:".yellow().bold(),
-                        res.tx_hash,
-                        profit_xlm,
-                        total_profit
+            dashboard_app.current_ledger = state.current_ledger_sequence();
+            dashboard_app.delta_count = delta_count;
+            dashboard_app.active_assets_count = state.all_assets().len();
+            dashboard_app.active_pools_count = state.all_pools().len();
+            dashboard_app.ops_per_sec = 250.0;
+
+            let opportunities = opp_engine.scan_opportunities(&state);
+            for opp in opportunities {
+                dashboard_app.add_opportunity(opp.clone());
+                dashboard_app.add_log(
+                    "DISCOV",
+                    &format!(
+                        "Found {:?} Opportunity: +{:.4} XLM ({:.2}%)",
+                        opp.strategy_type,
+                        opp.net_profit.as_units(),
+                        opp.profit_margin_pct
+                    ),
+                );
+
+                if let Ok(res) = coordinator.execute_opportunity(&opp, &state).await {
+                    dashboard_app.total_transactions_executed += 1;
+                    dashboard_app.cumulative_profit_xlm += opp.net_profit.as_units();
+                    dashboard_app.add_log(
+                        "EXEC",
+                        &format!(
+                            "Executed Tx {} | Profit: +{:.4} XLM",
+                            &res.tx_hash[..16],
+                            res.actual_profit_stroops as f64 / 10_000_000.0
+                        ),
                     );
                 }
-                Err(e) => {
-                    println!("{} Simulation / Execution failed: {}\n", "❌ REJECTED:".red(), e);
+            }
+
+            terminal.draw(|f| render_dashboard(f, &dashboard_app))?;
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+
+        crossterm::terminal::disable_raw_mode()?;
+        crossterm::execute!(
+            terminal.backend_mut(),
+            crossterm::terminal::LeaveAlternateScreen
+        )?;
+        terminal.show_cursor()?;
+    } else {
+        // Headless CLI execution mode
+        let mut delta_count = 0u64;
+        let mut total_profit = 0.0;
+        let mut executed_txs = 0;
+
+        while let Some(delta) = rx.recv().await {
+            delta_count += 1;
+            state.apply_delta(delta);
+
+            let current_seq = state.current_ledger_sequence();
+            let opportunities = opp_engine.scan_opportunities(&state);
+
+            for opp in opportunities {
+                println!(
+                    "{} [Ledger #{}] Discovered {:?} cycle: Hops={} | Est. Profit: +{:.4} XLM ({:.2}%)",
+                    "🎯 OPPORTUNITY DETECTED:".green().bold(),
+                    current_seq,
+                    opp.strategy_type,
+                    opp.hops.len(),
+                    opp.net_profit.as_units(),
+                    opp.profit_margin_pct
+                );
+
+                match coordinator.execute_opportunity(&opp, &state).await {
+                    Ok(res) => {
+                        executed_txs += 1;
+                        let profit_xlm = res.actual_profit_stroops as f64 / 10_000_000.0;
+                        total_profit += profit_xlm;
+                        println!(
+                            "{} Tx Hash: {} | Net Realized Profit: +{:.4} XLM | Total Cumulative PnL: +{:.4} XLM\n",
+                            "🚀 TX SUBMITTED & EXECUTED:".yellow().bold(),
+                            res.tx_hash,
+                            profit_xlm,
+                            total_profit
+                        );
+                    }
+                    Err(e) => {
+                        println!("{} Simulation / Execution failed: {}\n", "❌ REJECTED:".red(), e);
+                    }
                 }
             }
         }
-    }
 
-    println!("\n{}", "=========================================================".cyan());
-    println!("{}", " SUMMARY AUDIT REPORT ".yellow().bold());
-    println!(" Total Deltas Ingested: {}", delta_count);
-    println!(" Total MEV Executions: {}", executed_txs);
-    println!(" Total Realized PnL: +{:.4} XLM", total_profit);
-    println!("{}", "=========================================================".cyan());
+        println!("\n{}", "=========================================================".cyan());
+        println!("{}", " SUMMARY AUDIT REPORT ".yellow().bold());
+        println!(" Total Deltas Ingested: {}", delta_count);
+        println!(" Total MEV Executions: {}", executed_txs);
+        println!(" Total Realized PnL: +{:.4} XLM", total_profit);
+        println!("{}", "=========================================================".cyan());
+    }
 
     Ok(())
 }
