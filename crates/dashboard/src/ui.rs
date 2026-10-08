@@ -7,6 +7,7 @@ use ratatui::{
     Frame,
 };
 
+/// Render main telemetry dashboard view using Ratatui widgets
 pub fn render_dashboard(frame: &mut Frame, app: &DashboardApp) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
