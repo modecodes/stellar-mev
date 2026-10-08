@@ -5,6 +5,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 pub const STROOPS_PER_UNIT: i64 = 10_000_000;
 
 /// Represents an amount in Stellar Stroops (1 XLM = 10,000,000 Stroops)
+/// High-precision integer wrapper ensuring zero-cost arithmetic operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct StroopAmount(pub i64);
 
