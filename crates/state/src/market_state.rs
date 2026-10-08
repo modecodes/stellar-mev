@@ -14,6 +14,7 @@ pub struct MarketStateInner {
     pub offer_index: HashMap<u64, (Asset, Asset)>, // maps offer_id to pair
 }
 
+/// MarketState thread-safe container for fast concurrent access
 #[derive(Clone, Default)]
 pub struct MarketState {
     inner: Arc<RwLock<MarketStateInner>>,
