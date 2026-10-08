@@ -26,6 +26,7 @@ impl MarketState {
         }
     }
 
+    /// Process incoming real-time ledger deltas and update internal orderbooks/pools
     pub fn apply_delta(&self, delta: LedgerDelta) {
         let mut inner = self.inner.write();
         match delta {
