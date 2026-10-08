@@ -11,6 +11,7 @@ use std::time::Duration;
 use tokio::sync::mpsc;
 use tracing_subscriber::EnvFilter;
 
+/// Stellar MEV Execution Engine CLI arguments
 #[derive(Parser, Debug)]
 #[command(author, version, about = "High-Throughput Stellar MEV & DEX Execution Engine in Rust", long_about = None)]
 struct Args {
