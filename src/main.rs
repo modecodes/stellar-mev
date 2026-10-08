@@ -49,9 +49,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .init();
     }
 
-    println!("{}", "=========================================================".cyan());
+    println!("{}", "=========================================================".cyan().bold());
     println!("{}", "   ⚡ STELLAR MEV & DEX EXECUTION ENGINE (RUST) ⚡   ".yellow().bold());
-    println!("{}", "=========================================================".cyan());
+    println!("{}", "=========================================================".cyan().bold());
     println!(" Mode: {}", args.mode.green().bold());
     println!(" Min Profit Target: {:.4} XLM", args.min_profit);
     println!(" Capital Trade Size: {:.2} XLM", args.trade_size);
@@ -186,12 +186,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        println!("\n{}", "=========================================================".cyan());
+        println!("\n{}", "=========================================================".cyan().bold());
         println!("{}", " SUMMARY AUDIT REPORT ".yellow().bold());
         println!(" Total Deltas Ingested: {}", delta_count);
         println!(" Total MEV Executions: {}", executed_txs);
         println!(" Total Realized PnL: +{:.4} XLM", total_profit);
-        println!("{}", "=========================================================".cyan());
+        println!("{}", "=========================================================".cyan().bold());
     }
 
     Ok(())
