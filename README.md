@@ -1,4 +1,4 @@
-# ⚡ Stellar MEV & DEX Execution Engine (Rust)
+# Stellar MEV & DEX Execution Engine (Rust)
 
 A high-throughput, low-latency MEV (Maximal Extractable Value) and DEX execution engine built in Rust for the **Stellar Network** and **Soroban** environment.
 
@@ -6,7 +6,7 @@ Designed for real-time ledger stream ingestion, in-memory market state tracking,
 
 ---
 
-## 📐 Architecture Overview
+## Architecture Overview
 
 ```
               Stellar Ledger
@@ -44,7 +44,7 @@ Designed for real-time ledger stream ingestion, in-memory market state tracking,
 
 ---
 
-## 🚀 Key Modules & Capabilities
+## Key Modules & Capabilities
 
 1. **`stellar-mev-core`**: Core primitives (`Asset`, `Price`, `StroopAmount`, `Offer`, `LiquidityPool`, `LedgerDelta`, `ArbitragePath`).
 2. **`stellar-mev-streamer`**: High-throughput ingestion stream with real-time SSE, RPC polling, and a high-speed synthetic replay engine for micro-benchmarking.
@@ -59,7 +59,7 @@ Designed for real-time ledger stream ingestion, in-memory market state tracking,
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### Prerequisites
 - Rust 1.75+ / 1.80+
@@ -76,7 +76,7 @@ cargo test --workspace
 
 ---
 
-## 💻 CLI Commands
+## CLI Commands
 
 ### 1. Run Ingestion & Execution Engine (Headless Mode)
 ```bash
@@ -98,5 +98,5 @@ cargo run --release -- --mode replay --ledgers 500 --delay 100 --dashboard
 
 ---
 
-## 📄 License
+## License
 MIT / Apache-2.0

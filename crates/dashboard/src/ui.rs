@@ -22,7 +22,7 @@ pub fn render_dashboard(frame: &mut Frame, app: &DashboardApp) {
     let header_text = vec![
         Line::from(vec![
             Span::styled(
-                "  ⚡ STELLAR MEV & DEX EXECUTION ENGINE ⚡ ",
+                "  STELLAR MEV & DEX EXECUTION ENGINE ",
                 Style::default()
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
@@ -74,7 +74,7 @@ pub fn render_dashboard(frame: &mut Frame, app: &DashboardApp) {
                 .iter()
                 .map(|h| format!("{}->{}", h.source.code(), h.destination.code()))
                 .collect::<Vec<_>>()
-                .join(" ➔ ");
+                .join(" -> ");
 
             let content = Line::from(vec![
                 Span::styled(
@@ -108,14 +108,14 @@ pub fn render_dashboard(frame: &mut Frame, app: &DashboardApp) {
 
     // Right Box: Engine Metrics
     let summary_text = vec![
-        Line::from(Span::styled("⚡ Engine Architecture:", Style::default().fg(Color::Cyan))),
+        Line::from(Span::styled("Engine Architecture:", Style::default().fg(Color::Cyan))),
         Line::from("  • Rust Lock-free / RwLock Market State"),
         Line::from("  • Bellman-Ford Negative Log Cycle Detector"),
         Line::from("  • Constant Product Optimal Input Solver"),
         Line::from("  • SDEX Limit Orderbook Depth Walker"),
         Line::from("  • Pre-Flight Pre-execution Simulator"),
         Line::from(""),
-        Line::from(Span::styled("📈 Realtime Performance:", Style::default().fg(Color::Green))),
+        Line::from(Span::styled("Realtime Performance:", Style::default().fg(Color::Green))),
         Line::from(format!("  • Ingestion Throughput: {:.1} ops/sec", app.ops_per_sec)),
         Line::from(format!("  • Opportunity Latency: < 1.2 ms")),
     ];

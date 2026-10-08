@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("{}", "=========================================================".cyan().bold());
-    println!("{}", "   ⚡ STELLAR MEV & DEX EXECUTION ENGINE (RUST) ⚡   ".yellow().bold());
+    println!("{}", "   STELLAR MEV & DEX EXECUTION ENGINE (RUST)   ".yellow().bold());
     println!("{}", "=========================================================".cyan().bold());
     println!(" Mode: {}", args.mode.green().bold());
     println!(" Min Profit Target: {:.4} XLM", args.min_profit);
@@ -159,7 +159,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             for opp in opportunities {
                 println!(
                     "{} [Ledger #{}] Discovered {:?} cycle: Hops={} | Est. Profit: +{:.4} XLM ({:.2}%)",
-                    "🎯 OPPORTUNITY DETECTED:".green().bold(),
+                    "[OPPORTUNITY DETECTED]".green().bold(),
                     current_seq,
                     opp.strategy_type,
                     opp.hops.len(),
@@ -174,14 +174,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         total_profit += profit_xlm;
                         println!(
                             "{} Tx Hash: {} | Net Realized Profit: +{:.4} XLM | Total Cumulative PnL: +{:.4} XLM\n",
-                            "🚀 TX SUBMITTED & EXECUTED:".yellow().bold(),
+                            "[TX SUBMITTED & EXECUTED]".yellow().bold(),
                             res.tx_hash,
                             profit_xlm,
                             total_profit
                         );
                     }
                     Err(e) => {
-                        println!("{} Simulation / Execution failed: {}\n", "❌ REJECTED:".red(), e);
+                        println!("{} Simulation / Execution failed: {}\n", "[REJECTED]".red(), e);
                     }
                 }
             }
