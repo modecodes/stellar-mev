@@ -64,4 +64,21 @@ impl TransactionBuilder {
             xdr_envelope_base64: dummy_xdr,
         }
     }
+
+    /// Prepare Soroban InvokeHostFunction contract transaction payload
+    pub fn build_soroban_invoke_tx(
+        &self,
+        contract_id: &str,
+        function_name: &str,
+        sequence: u64,
+    ) -> PreparedTransaction {
+        PreparedTransaction {
+            tx_hash: format!("{:064x}", sequence ^ 0xCAFEBABE),
+            source_account: self.source_account.clone(),
+            sequence_number: sequence,
+            fee_stroops: self.base_fee + 2_000,
+            operations_summary: format!("SOROBAN::{}({})", contract_id, function_name),
+            xdr_envelope_base64: format!("SOROBAN_HOST_FN_{}_{}", contract_id, sequence),
+        }
+    }
 }
