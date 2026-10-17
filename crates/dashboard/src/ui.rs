@@ -117,7 +117,7 @@ pub fn render_dashboard(frame: &mut Frame, app: &DashboardApp) {
         Line::from(""),
         Line::from(Span::styled("Realtime Performance:", Style::default().fg(Color::Green))),
         Line::from(format!("  • Ingestion Throughput: {:.1} ops/sec", app.ops_per_sec)),
-        Line::from(format!("  • Opportunity Latency: < 1.2 ms")),
+        Line::from("  • Opportunity Latency: < 1.2 ms"),
     ];
     let summary_block = Block::default()
         .borders(Borders::ALL)

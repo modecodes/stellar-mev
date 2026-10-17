@@ -21,6 +21,12 @@ pub struct DashboardApp {
     pub logs: VecDeque<MetricLog>,
 }
 
+impl Default for DashboardApp {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DashboardApp {
     pub fn new() -> Self {
         Self {

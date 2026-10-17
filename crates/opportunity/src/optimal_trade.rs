@@ -58,3 +58,50 @@ pub fn compute_optimal_orderbook_fill(
 
     best_fill
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use stellar_mev_core::{Asset, Offer, Price};
+
+    #[test]
+    fn test_compute_optimal_amm_input() {
+        let xlm = Asset::native();
+        let usdc = Asset::usdc("GBBD47IF6LWK7P7MDEVTESTISSUER1234567890");
+        let pool = LiquidityPool::new(
+            "pool_xlm_usdc_test".to_string(),
+            xlm,
+            usdc,
+            StroopAmount::from_units(10_000.0), // 10,000 XLM
+            StroopAmount::from_units(1_000.0),  // 1,000 USDC -> 1 USDC = 10 XLM
+            30,                                 // 0.3% fee (30 bp)
+        );
+
+        // Counter market offers 15 XLM per USDC (> 10 AMM price) -> arbitrage exists
+        let optimal = compute_optimal_amm_input(&pool, true, 15.0);
+        assert!(optimal.is_positive());
+        assert!(optimal.as_units() < 10_000.0);
+
+        // Counter market offers 5 XLM per USDC (< 10 AMM price) -> no profitable input
+        let unprofitable = compute_optimal_amm_input(&pool, true, 5.0);
+        assert_eq!(unprofitable, StroopAmount::zero());
+    }
+
+    #[test]
+    fn test_compute_optimal_orderbook_fill() {
+        let mut ob = OrderBook::new();
+
+        ob.add_ask(Offer {
+            offer_id: 1,
+            seller: "SELLER1".to_string(),
+            selling: Asset::native(),
+            buying: Asset::usdc("GBBD47IF6LWK7P7MDEVTESTISSUER1234567890"),
+            amount: StroopAmount::from_units(500.0),
+            price: Price::from_f64(1.2),
+            last_modified_ledger: 100,
+        });
+
+        let best_fill = compute_optimal_orderbook_fill(&ob, 1.05, StroopAmount::from_units(100.0));
+        assert!(best_fill.is_positive());
+    }
+}

@@ -51,7 +51,7 @@ impl LiquidityPool {
             return StroopAmount::zero();
         }
 
-        let fee_multiplier = (10_000 - self.fee_bp as i128) as i128;
+        let fee_multiplier = 10_000 - self.fee_bp as i128;
         let amount_in_with_fee = amount_in.as_stroops() as i128 * fee_multiplier;
         let numerator = amount_in_with_fee * r_out as i128;
         let denominator = (r_in as i128 * 10_000) + amount_in_with_fee;

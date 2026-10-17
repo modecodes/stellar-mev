@@ -100,15 +100,11 @@ impl MarketGraph {
 
                 let cycle_start = curr;
                 let mut step = cycle_start;
-                loop {
-                    if let Some(ref e) = parent_edge[step] {
-                        cycle_edges.push(e.clone());
-                        step = self.asset_index[&e.from];
-                        visited_cycle_nodes.insert(step);
-                        if step == cycle_start {
-                            break;
-                        }
-                    } else {
+                while let Some(ref e) = parent_edge[step] {
+                    cycle_edges.push(e.clone());
+                    step = self.asset_index[&e.from];
+                    visited_cycle_nodes.insert(step);
+                    if step == cycle_start {
                         break;
                     }
                 }
